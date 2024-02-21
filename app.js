@@ -1,7 +1,21 @@
 const { Builder, Browser, By } = require("selenium-webdriver");
 
+const { Options } = require("selenium-webdriver/chrome");
+const Proxy = require("selenium-webdriver/proxy");
+
+const PROXY_HOST = "11.456.448.110";
+const PROXY_PORT = "8080";
+
 async function getUmucyoAssignments() {
-  let driver = await new Builder().forBrowser(Browser.CHROME).build();
+  //chrome options
+  const chromeOptions = new Options();
+  const proxy = `${PROXY_HOST}:${PROXY_PORT}`;
+  chromeOptions.setProxy(Proxy.manual({ http: proxy, https: proxy }));
+
+  let driver = await new Builder()
+    .forBrowser(Browser.CHROME)
+    .setChromeOptions(chromeOptions)
+    .build();
   try {
     await driver.get("https://umucyo.gov.rw/");
     await driver.manage().window().setRect({ width: 1512, height: 859 });
@@ -9,6 +23,15 @@ async function getUmucyoAssignments() {
     await driver.findElement(By.linkText("e-Bidding")).click();
     await driver.findElement(By.linkText("List of advertising (all)")).click();
     await driver.findElement(By.id("tendTypeCd")).click();
+
+    //get the session id and proxy
+    await driver.getSession().then((session) => {
+      console.log({
+        sessionId: session.getId(),
+        proxy: session.getCapabilities().get("proxy"),
+      });
+    });
+
     {
       const dropdown = await driver.findElement(By.id("tendTypeCd"));
       await dropdown
